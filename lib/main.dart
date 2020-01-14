@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:leancloud_storage/leancloud.dart';
 
 void main() => runApp(MyApp());
 
@@ -6,6 +7,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    LeanCloud.initialize('ikGGdRE2YcVOemAaRbgp1xGJ-gzGzoHsz', 'NUKmuRbdAhg1vrb2wexYo1jo', server: 'https://ikggdre2.lc-cn-n1-shared.com');
+    LCLogger.setLevel(LCLogger.DebugLevel);
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -44,16 +47,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String _sessionToken;
   int _counter = 0;
 
-  void _incrementCounter() {
+  void _incrementCounter() async {
+    // 查询
+    int limit = 2;
+    LCQuery<LCObject> query = new LCQuery<LCObject>('Hello');
+    query.limit(limit);
+    List<LCObject> list = await query.find();
+    print(list.length);
+
+    // 登录
+    await LCUser.login('hello', 'world');
+
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      _sessionToken = LCUser.currentUser.sessionToken;
+      _counter = list.length;
     });
   }
 
@@ -92,10 +107,10 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'You have pushed the button this many times:',
+              'SessionToken: $_sessionToken',
             ),
             Text(
-              '$_counter',
+              'Query count: $_counter',
               style: Theme.of(context).textTheme.display1,
             ),
           ],
