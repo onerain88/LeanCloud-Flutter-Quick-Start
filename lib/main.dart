@@ -7,7 +7,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    LeanCloud.initialize('ikGGdRE2YcVOemAaRbgp1xGJ-gzGzoHsz', 'NUKmuRbdAhg1vrb2wexYo1jo', server: 'https://ikggdre2.lc-cn-n1-shared.com');
+    LeanCloud.initialize(
+        'ikGGdRE2YcVOemAaRbgp1xGJ-gzGzoHsz', 'NUKmuRbdAhg1vrb2wexYo1jo',
+        server: 'https://ikggdre2.lc-cn-n1-shared.com');
     LCLogger.setLevel(LCLogger.DebugLevel);
     return MaterialApp(
       title: 'Flutter Demo',
@@ -47,6 +49,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String _userId;
   String _sessionToken;
   int _counter = 0;
 
@@ -58,17 +61,44 @@ class _MyHomePageState extends State<MyHomePage> {
     List<LCObject> list = await query.find();
     print(list.length);
 
-    // 登录
-    await LCUser.login('hello', 'world');
-
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _sessionToken = LCUser.currentUser.sessionToken;
       _counter = list.length;
+    });
+  }
+
+  void _login() async {
+    // 登录
+    LCUser currentUser = await LCUser.login('hello', 'world');
+    setState(() {
+      _userId = currentUser.username;
+      _sessionToken = currentUser.sessionToken;
+    });
+  }
+
+  void _loadFromLocal() async {
+    LCUser currentUser = await LCUser.getCurrent();
+    setState(() {
+      _userId = currentUser.username;
+      _sessionToken = currentUser.sessionToken;
+    });
+  }
+
+  void _logout() async {
+    await LCUser.logout();
+    LCUser currentUser = await LCUser.getCurrent();
+    setState(() async {
+      if (currentUser != null) {
+        _userId = currentUser.username;
+        _sessionToken = currentUser.sessionToken;
+      } else {
+        _userId = null;
+        _sessionToken = null;
+      }
     });
   }
 
@@ -106,6 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text('UserId: $_userId'),
             Text(
               'SessionToken: $_sessionToken',
             ),
@@ -113,6 +144,11 @@ class _MyHomePageState extends State<MyHomePage> {
               'Query count: $_counter',
               style: Theme.of(context).textTheme.display1,
             ),
+            RaisedButton(onPressed: _login, child: Text("login")),
+            RaisedButton(
+                onPressed: _loadFromLocal, child: Text("load from local")),
+            RaisedButton(onPressed: _logout, child: Text('logout')),
+            RaisedButton(onPressed: _incrementCounter, child: Text('increment'))
           ],
         ),
       ),
